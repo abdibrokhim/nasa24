@@ -12,8 +12,8 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState('');
-  // const [indexName, setIndexName] = useState("nasa");
-  const [indexName, setIndexName] = useState("f77961ee-af74-4c9e-9b37-05ef43c0ca71");
+  const [indexName, setIndexName] = useState("nasa");
+  // const [indexName, setIndexName] = useState("f77961ee-af74-4c9e-9b37-05ef43c0ca71");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
