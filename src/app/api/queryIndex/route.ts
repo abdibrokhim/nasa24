@@ -7,8 +7,11 @@ const client = new PineconeClient({
 });
 
 export async function POST(request: Request) {
+  console.log('POST /api/queryIndex');
   try {
     const { indexName, question } = await request.json();
+    console.log('indexName:', indexName);
+    console.log('question:', question);
 
     const answer = await queryDoc(client, indexName, question);
 

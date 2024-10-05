@@ -13,7 +13,7 @@ export const queryDoc = async (
 
   // Generate the query embedding
   const queryEmbedding = await new OpenAIEmbeddings({
-    apiKey: "",
+    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
     batchSize: 512,
     model: "text-embedding-3-large",
   }).embedQuery(question);
@@ -33,7 +33,7 @@ export const queryDoc = async (
 
   if (queryResponse.matches.length) {
     const llm = new ChatOpenAI({
-      apiKey: "",
+      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
       model: "gpt-4o",
     });
 

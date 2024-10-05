@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, use } from 'react';
 import { faArrowUp, faRotateRight, faShower } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ReactMarkdown from 'react-markdown';
@@ -12,8 +12,13 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState('');
-  const [indexName, setIndexName] = useState('nasa');
+  // const [indexName, setIndexName] = useState("nasa");
+  const [indexName, setIndexName] = useState("f77961ee-af74-4c9e-9b37-05ef43c0ca71");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    listIndexes();
+  }, []);
 
   const handleSendMessage = async () => {
     if (input.trim() === '') return;
@@ -27,13 +32,15 @@ export default function Home() {
         throw new Error('No index available. Please upload a file first.');
       }
 
-      const response = await fetch(`/api/chat`, {
+      const response = await fetch(`/api/queryIndex`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ indexName, question: input }),
+        body: JSON.stringify({ indexName: indexName, question: input }),
       });
+
+      console.log('response:', response);
 
       if (!response.ok) {
         throw new Error('Error querying index');
@@ -48,6 +55,20 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  const listIndexes = async () => {
+    try {
+      const response = await fetch(`/api/listIndexes`);
+      if (!response.ok) {
+        throw new Error('Error listing indexes');
+      }
+
+      const data = await response.json();
+      console.log('data:', data);
+    } catch (error: any) {
+      console.error('Error listing indexes:', error);
+    }
+  }
 
   const startOver = () => {
     console.log('Starting over...');
