@@ -1,101 +1,163 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useRef, useEffect } from 'react';
+import { faArrowUp, faRotateRight, faShower } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import ReactMarkdown from 'react-markdown';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [messages, setMessages] = useState([
+    { sender: 'bot', text: 'hey' },
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [indexName, setIndexName] = useState('nasa');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleSendMessage = async () => {
+    if (input.trim() === '') return;
+
+    setLoading(true);
+    setMessages(prev => [...prev, { sender: 'user', text: input }]);
+    setInput('');
+
+    try {
+      if (!indexName) {
+        throw new Error('No index available. Please upload a file first.');
+      }
+
+      const response = await fetch(`/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ indexName, question: input }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error querying index');
+      }
+
+      const data = await response.json();
+      setMessages(prev => [...prev, { sender: 'bot', text: data.answer }]);
+    } catch (error: any) {
+      console.error('Error querying index:', error);
+      setMessages(prev => [...prev, { sender: 'bot', text: error.message }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startOver = () => {
+    console.log('Starting over...');
+    console.log('initializing...');
+    setMessages([{ sender: 'bot', text: 'Hello! How can I assist you today?' }]);
+    setInput('');
+    setLoading(false);
+    setFileName('');
+    setIndexName('');
+  }
+
+  const cleanChat = () => {
+    console.log('Cleaning chat...');
+    setMessages([{ sender: 'bot', text: 'Hello! How can I assist you today?' }]);
+    setInput('');
+  }
+
+  const handleKeyDown = (e: any) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleInput = (e: any) => {
+    setInput(e.target.value);
+    adjustTextareaHeight();
+  };
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input]);
+
+  const loader = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+      <circle cx={4} cy={12} r={3} fill="currentColor">
+        <animate id="svgSpinners3DotsScale0" attributeName="r" begin="0;svgSpinners3DotsScale1.end-0.25s" dur="0.75s" values="3;.2;3" />
+      </circle>
+      <circle cx={12} cy={12} r={3} fill="currentColor">
+        <animate attributeName="r" begin="svgSpinners3DotsScale0.end-0.6s" dur="0.75s" values="3;.2;3" />
+      </circle>
+      <circle cx={20} cy={12} r={3} fill="currentColor">
+        <animate id="svgSpinners3DotsScale1" attributeName="r" begin="svgSpinners3DotsScale0.end-0.45s" dur="0.75s" values="3;.2;3" />
+      </circle>
+    </svg>
+  );
+
+  return (
+    <main className="flex min-h-screen flex-col justify-between">
+      <div className='flex flex-col gap-4 fixed top-4 left-4'>
+        <button
+          onClick={startOver}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-[#eeeeee] text-black shadow cursor-pointer "
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <FontAwesomeIcon icon={faRotateRight} />
+        </button>
+        <button
+          onClick={cleanChat}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-[#eeeeee] text-black shadow cursor-pointer "
           >
-            Read our docs
-          </a>
+          <FontAwesomeIcon icon={faShower} />
+        </button>
+      </div>
+      <div className="w-full lg:max-w-5xl px-16 lg:px-0 mx-auto">
+        <div className="mb-32 w-full lg:text-left overflow-auto">
+          <div className="overflow-y-auto flex-1 p-4">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`p-4 mb-2 rounded-lg ${
+                  message.sender === 'bot' ? 'bg-[#1e1e1e]' : 'bg-[#2e2e2e]'
+                } text-white max-w-full`}
+              >
+                <ReactMarkdown>{message.text}</ReactMarkdown>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+      <div className="w-[80%] lg:max-w-5xl mx-auto flex items-center p-2 mb-8 fixed bottom-0 left-0 right-0 shadow-lg gap-4 bg-[#2e2e2e] rounded-full">
+        <textarea
+          tabIndex={0}
+          ref={textareaRef}
+          className="flex-1 resize-none border-none focus:ring-0 outline-none bg-transparent text-white pl-6 pt-2"
+          placeholder="Type your message..."
+          value={input}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          style={{ minHeight: '24px', maxHeight: '128px' }}
+        />
+        <button
+          disabled={loading || input === ''}
+          onClick={handleSendMessage}
+          className={`flex items-center justify-center w-10 h-10 rounded-full shadow ${
+            loading || input === '' ? 'cursor-not-allowed bg-[#4e4e4e] text-black'  : 'cursor-pointer bg-[#eeeeee] text-black'}`}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          {!loading 
+            ? <FontAwesomeIcon icon={faArrowUp} />
+            : <span className='flex justify-center items-center text-white'>{loader()}</span>
+          }
+        </button>
+      </div>
+    </main>
   );
 }
